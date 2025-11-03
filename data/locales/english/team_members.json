@@ -1,0 +1,31 @@
+{
+  "common": {
+    "cancelled": "Action cancelled.",
+    "team_full": "Team “{team}” is already full.",
+    "competition_finished": "The competition for team “{team}” has already finished.",
+    "already_in_team": "{name} is already a member of this team."
+  },
+  "teams": {
+    "start": "Select a team to add a user.",
+    "none": "No teams are available right now (they are full or competitions have finished).",
+    "pick": "Choose a team • page {page}/{pages}.",
+    "item": "{title} ({slug}) • {members}/{capacity}",
+    "selected": "Team “{team}” selected. Choose a user.",
+    "full_after": "Team “{team}” is full now. Select another team."
+  },
+  "users": {
+    "pick": "Choose a user for team “{team}” • page {page}/{pages}.",
+    "item": "{name} ({username})",
+    "none": "No eligible users remain for this team.",
+    "added_captain": "{name} added as captain.",
+    "added_member": "{name} added as team member."
+  },
+  "status": {
+    "count": "Team “{team}” now has {members}/{capacity} members."
+  },
+  "nav": {
+    "prev": "« Prev",
+    "next": "Next »",
+    "back": "⬅ Back"
+  }
+}

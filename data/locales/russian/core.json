@@ -1,0 +1,9 @@
+{
+	"choose_language": "Выберите язык",
+	"choose_role": "Выберите роль",
+	"your_name": "[Ваше имя]",
+	"you_can_also_go_back": "Вы также можете вернуться назад",
+	"language_changed": "Язык был успешно изменён",
+	"role_changed": "Роль была успешна изменена",
+	"exit_language_change_mode": "Вы вышли из режима смены языка"
+}

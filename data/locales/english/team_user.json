@@ -1,0 +1,69 @@
+{
+  "errors": {
+    "no_team": "You are not assigned to any team yet.",
+    "missing_page": "No information found for this section."
+  },
+  "team": {
+    "info": "Team: {team}\nTrack: {track}",
+    "no_track": "—"
+  },
+  "pages": {
+    "missing": "Content is not available for this page."
+  },
+  "switch": {
+    "none": "You do not have other teams to switch to.",
+    "pick": "Choose a team to switch to (total: {count}).",
+    "item": "{team} — {track}",
+    "done": "Team switched successfully."
+  },
+  "nav": {
+    "prev": "« Prev",
+    "next": "Next »",
+    "back": "⬅ Back"
+  },
+  "submit": {
+    "default": "Send a ZIP archive with your solution.",
+    "entered": "Submission mode activated.",
+    "prompt": "Attach your solution as a ZIP file.",
+    "limit_info": "You have used {used}/{limit} submissions.",
+    "used": "Submissions sent: {used}.",
+    "downloading": "Downloading… {progress}",
+    "downloading_bytes": "Downloading… {downloaded}",
+    "download_complete": "Download finished ({size}).",
+    "awaiting": "Please send a ZIP archive.",
+    "not_zip": "Only ZIP files are accepted.",
+    "saved": "✅ Submission '{title}' received! ID: {submission_id}",
+    "error": "Could not save your submission. Please try again later.",
+    "competition_finished": "The competition for your team has already finished.",
+    "limit_reached": "Submission limit reached for your team.",
+    "no_membership": "You are not a member of this team.",
+    "instructions_title": "Submission instructions:",
+    "download_failed": "Failed to download the file. Please try again.",
+    "cancelled": "Submission cancelled.",
+    "auto_success": "🤖 Auto evaluation: {status}, value {value}.",
+    "auto_failed": "🤖 Auto evaluation failed. The submission will be reviewed manually.",
+    "auto_unknown_status": "pending",
+    "notify": {
+      "header": "<b>Submission updated</b>",
+      "title": "Title: {title}",
+      "status": "Status: {value}",
+      "status_change": "Status: {old} -> {new}",
+      "value": "Value: {value}",
+      "value_change": "Value: {old} -> {new}"
+    }
+  },
+  "leaderboard": {
+    "header": "<b>Leaderboard</b>\nCompetition: {competition}\nTrack: {track}\nSort: {direction}",
+    "direction_desc": "Higher value first",
+    "direction_asc": "Lower value first",
+    "no_track": "Leaderboard is unavailable because your team is not assigned to a track.",
+    "not_found": "Leaderboard is temporarily unavailable.",
+    "empty": "No submissions yet.",
+    "row": "{index}. {team} — {value} (submissions: {submissions})",
+    "row_current": "{index}. {team} — {value} (submissions: {submissions}) ← your team",
+    "value_none": "—",
+    "no_values": "Leaderboard cannot be formed yet: no evaluated submissions.",
+    "page_status": "Page {current}/{total}",
+    "expired": "Leaderboard data has expired. Please request it again."
+  }
+}

@@ -1,0 +1,9 @@
+{
+	"choose_language": "Choose a language",
+	"choose_role": "Choose a role",
+	"your_name": "[Your name]", 
+	"you_can_also_go_back": "You can also go back",
+	"language_changed": "Language has been changed successfully",
+	"role_changed": "Role has been changed successfully",
+	"exit_language_change_mode": "You have exited the language change mode"
+}

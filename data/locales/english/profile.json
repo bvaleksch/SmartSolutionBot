@@ -1,0 +1,4 @@
+{
+  "with_team": "👤 Profile\nName: {name}\nUsername: {username}\nRole: {role}\n\n🏁 Competition: {competition}\n👥 Active team: {team_name}\nTeam track: {team_track}\n\n📇 Contacts\nEmail: {email}\nPhone: {phone}",
+  "without_team": "👤 Profile\nName: {name}\nUsername: {username}\nRole: {role}\n\n👥 Active team: —\nTeam track: —\n\n📇 Contacts\nEmail: {email}\nPhone: {phone}"
+}

@@ -1,0 +1,11 @@
+{
+  "admin": "<b>Welcome, {first_name}!</b>\n\nYou are registered as an <b>administrator</b>. You can coordinate participants, manage teams, and monitor the overall progress of the event.\n\nUse the menu below to navigate key sections.",
+  
+  "contestant": "<b>Welcome back, {first_name}!</b>\n\nYour account is active and ready to work. Use the buttons below to view your profile, manage your team, or submit solutions.\n\n<i>We wish you productive work and great results!</i>",
+  
+  "unregistered": "<b>Hello!</b>\n\nYour account is not yet approved by the organizers. Please contact them to complete your registration.\n\nOnce approved, you will be able to access all the bot’s features, including teams and submissions.",
+  
+  "whitelist": "<b>Welcome, {first_name}!</b>\n\nYou have <b>special access rights</b>. You can freely switch between participant and administrator modes using the command <code>/switch_role</code>.\n\n<i>This allows you to test both interfaces and assist others when needed.</i>",
+
+  "your_name": "[Your name]"
+}

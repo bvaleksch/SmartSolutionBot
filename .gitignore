@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Python caches
+*.log
+*.pot
+
+# IDE configs
+.vscode/
+.idea/
+
+# Local data and secrets
+.env
+*.db
+
+# Runtime artifacts
+*.sqlite3
+*.pyc
+*.pyo
+*.pyd
+*.swp
+.DS_Store
+
+# Bot data
+/data/submissions/
+/data/action.json
+

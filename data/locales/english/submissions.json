@@ -1,0 +1,55 @@
+{
+  "mode": {
+    "enter": "📦 Submission moderation mode is active."
+  },
+  "status": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "error": "Error"
+  },
+  "list": {
+    "item": "{title} · {status} · {created} · value {value}",
+    "prev": "« Prev",
+    "next": "Next »",
+    "close": "Close",
+    "back": "⬅ Back"
+  },
+  "view": {
+    "list_title": "<b>All submissions</b>\nPage {page} of {pages} (total: {total})",
+    "empty": "There are no submissions yet."
+  },
+  "detail": {
+    "title": "<b>{title}</b>\nID: {submission_id}",
+    "team": "Team: {team}",
+    "unknown": "—",
+    "user": "User: {user}",
+    "status": "Status: {status}",
+    "created_at": "Created at (MSK): {created}",
+    "download": "⬇️ Download ZIP",
+    "file_missing": "The archive for this submission is missing.",
+    "not_found": "Submission is not available.",
+    "file_caption": "Submission {title}",
+    "value": "Value: {value}"
+  },
+  "rate": {
+    "list_title": "<b>Pending submissions</b>\nPage {page} of {pages} (total: {total})",
+    "empty": "No pending submissions.",
+    "choose_status": "Choose the new status:",
+    "outdated": "This submission has already been processed.",
+    "cancelled": "Operation cancelled.",
+    "done": "Submission {title} (ID: {submission_id}) updated — {status}. Value: {value}.",
+    "ask_value": "Send a value (number). Type “skip” to leave it empty.",
+    "invalid_value": "Please send a numeric value or “skip”."
+  },
+  "rerate": {
+    "list_title": "<b>Accepted submissions</b>\nPage {page} of {pages} (total: {total})",
+    "empty": "No accepted submissions."
+  },
+  "actions": {
+    "accept": "✅ Mark as accepted",
+    "reject": "❌ Mark as rejected",
+    "error": "⚠️ Mark as error",
+    "cancel": "↩️ Cancel"
+  }
+}

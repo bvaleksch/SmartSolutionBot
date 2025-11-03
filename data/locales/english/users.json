@@ -1,0 +1,47 @@
+{
+  "common": {
+    "cancelled": "Cancelled."
+  },
+  "nav": {
+    "prev": "« Prev",
+    "next": "Next »",
+    "back": "⬅ Back"
+  },
+  "item": "{username} {first_name} {last_name}",
+  "add": {
+    "step_username": "➕ Add user (1/5)\nSend @username (min 3 chars).",
+    "cannot_skip_username": "Username is required and cannot be skipped.",
+    "bad_username": "Invalid format. Send @username (min 3 chars).",
+    "step_first": "Add user (2/5)\nSend first name (or '-' / Skip).",
+    "step_last": "Add user (3/5)\nSend last name (or '-' / Skip).",
+    "step_email": "Add user (4/5)\nSend email (or '-' / Skip).",
+    "bad_email": "Invalid email. Send a valid email or use Skip.",
+    "step_phone": "Add user (5/5)\nSend phone (or '-' / Skip).",
+    "done": "✅ User created/updated: {username}"
+  },
+  "edit": {
+    "pick_user": "👤 Edit user • page {page}/{pages}\nPick from the list or send @username.",
+    "or_send_username": "Or send @username to select a user.",
+    "choose_field": "Choose a field to edit:",
+    "user_selected": "User selected. Choose a field:",
+    "send_value": "Send new value.\nYou can send '-' to clear.",
+    "send_role": "Choose a role using the buttons below.",
+    "send_username": "Send new @username (format: @name).",
+    "current_info": "Current data:\n{details}",
+    "not_found": "User not found.",
+    "bad_role": "Invalid role. Use the buttons on the keyboard.",
+    "bad_username": "Invalid format. Send @username (min 3 chars).",
+    "bad_email": "Invalid email. Send a valid email or '-' to clear.",
+    "unsupported": "Unsupported field.",
+    "updated": "✅ {username} updated • {field}."
+  },
+  "fields": {
+    "first_name": "First name",
+    "last_name": "Last name",
+    "middle_name": "Middle name",
+    "username": "Username (@)",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role"
+  }
+}

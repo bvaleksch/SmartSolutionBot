@@ -1,0 +1,60 @@
+{
+  "common": {
+    "cancelled": "Action cancelled."
+  },
+  "mode": {
+    "enter": "👥 Team admin mode — choose an action."
+  },
+  "nav": {
+    "prev": "« Prev",
+    "next": "Next »",
+    "back": "⬅ Back"
+  },
+  "add": {
+    "begin": "Let's create a team. First, choose a competition.",
+    "pick_competition": "🏁 Choose a competition • page {page}/{pages}.",
+    "no_competitions": "There are no competitions yet. Create a competition first.",
+    "comp_item": "{title} (starts {start})",
+    "competition_selected": "Competition “{competition}” selected.",
+    "pick_track": "Select a track for this team (competition: {competition}).",
+    "track_item": "{title} ({slug})",
+    "no_tracks": "This competition has no tracks yet.",
+    "track_selected": "Track “{track}” selected.",
+    "track_confirm": "Track “{track}” from competition “{competition}” selected.",
+    "step_title": "Send the team title.",
+    "step_slug": "Send the team slug (letters, digits, underscore; min 3 chars).",
+    "bad_slug": "Slug must contain only letters, digits, or underscore (min 3 chars).",
+    "slug_exists": "A team with this slug already exists. Please choose another slug.",
+    "created": "✅ Team “{title}” created."
+  },
+  "edit": {
+    "pick_team": "👥 Edit team • page {page}/{pages}\nChoose from the list or send a slug.",
+    "or_send_slug": "Or send a team slug to select it.",
+    "team_selected": "Team selected. Choose a field:",
+    "choose_field": "Select a field to edit:",
+    "send_value": "Send a new value.",
+    "send_slug": "Send a new slug (letters, digits, underscore; min 3 chars).",
+    "send_error": "Send a new error message or '-' to clear it.",
+    "updated": "✅ Team “{title}” updated • {field}.",
+    "not_found": "Team not found.",
+    "unsupported": "Field is not supported.",
+    "empty": "There are no teams yet. Create one first."
+  },
+  "fields": {
+    "title": "Title",
+    "slug": "Slug",
+    "error": "Error message",
+    "back": "Back"
+  },
+  "item": "{title} ({slug})",
+  "snapshot": {
+    "title": "• Title: {title}",
+    "slug": "• Slug: {slug}",
+    "track": "• Track: {track_title} ({track_slug})",
+    "no_track": "• Track: —",
+    "competition": "• Competition: {competition_title}",
+    "no_competition": "• Competition: —",
+    "error": "• Error: {error}",
+    "no_error": "• Error: —"
+  }
+}

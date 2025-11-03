@@ -1,0 +1,85 @@
+{
+  "common": {
+    "cancelled": "Action cancelled."
+  },
+  "mode": {
+    "enter": "🏁 Competition admin mode — choose an option."
+  },
+  "nav": {
+    "prev": "« Prev",
+    "next": "Next »"
+  },
+  "item": "{title} • starts {start}",
+  "add": {
+    "step_title": "➕ Creating a competition (1/4)\nSend the title.",
+    "step_slug": "Step 2/4 — send a slug (letters, digits, underscore; min 3 chars).",
+    "bad_slug": "Slug must contain only letters, digits, or underscore (min 3 chars).",
+    "slug_exists": "A competition with this slug already exists. Send another slug.",
+    "step_start_at": "Step 3/4 — send the start time in format {fmt} (MSK).",
+    "step_end_at": "Step 4/4 — send the end time in format {fmt} (MSK).",
+    "bad_datetime": "Can't parse date/time. Use format {fmt} (MSK).",
+    "end_before_start": "End time must be after the start time.",
+    "created": "✅ Competition “{title}” created.",
+    "need_track": "Now add at least one track for this competition.",
+    "finish_fields_first": "Finish filling in the competition data first."
+  },
+  "track": {
+    "step_title": "➕ Add track — send the track title.",
+    "step_slug": "Send a track slug (letters, digits, underscore; min 3 chars).",
+    "bad_slug": "Track slug must contain only letters, digits, or underscore (min 3 chars).",
+    "slug_exists": "A track with this slug already exists for the competition. Send another one.",
+    "step_max_contestants": "Send the max number of contestants in a team (or '-' to use default 3).",
+    "step_max_submissions": "Send the total submission limit for this track.",
+    "step_about": "Send the HTML file for the track “About” page ({language}).",
+    "step_rule": "Send the HTML file for the track rules page ({language}).",
+    "expect_html": "Please send an HTML file ({language}).",
+    "expect_html_generic": "Please send an HTML file.",
+    "about_received": "About page file received ({language}).",
+    "rule_received": "Rules page file received ({language}).",
+    "missing_language": "Language(s) not configured: {languages}.",
+    "missing_file": "Missing file for {language}. Please upload it before continuing.",
+    "bad_number": "Send a positive integer.",
+    "created": "✅ Track “{title}” created.",
+    "pages_created": "📄 About and rules pages saved.",
+    "about_page_title": "{title} — About ({language})",
+    "rule_page_title": "{title} — Rules ({language})",
+    "count": "Tracks",
+    "list_header": "Tracks:",
+    "item": "  • {title} ({slug}) — team limit {max_contestants}, submissions limit {max_submissions}",
+    "empty": "No tracks yet.",
+    "need_one": "Add at least one track before leaving this mode.",
+    "step_instruction": "Send the HTML file for the submission instructions ({language}).\nSend '-' to skip.",
+    "instruction_received": "Instruction file received ({language}).",
+    "instruction_skipped": "Instruction skipped ({language}).",
+    "expect_instruction": "Please send an HTML instruction file or '-' to skip ({language}).",
+    "expect_instruction_generic": "Please send an HTML instruction file or '-' to skip.",
+    "instruction_page_title": "{title} — Instructions ({language})",
+    "instructions_saved": "Instruction pages saved.",
+    "step_sort_by": "Send how values should be sorted: 'asc' for ascending or 'desc' for descending.",
+    "bad_sort_by": "Please send “asc” or “desc”."
+  },
+  "edit": {
+    "pick_competition": "👑 Edit competition • page {page}/{pages}\nChoose from the list or send a slug.",
+    "or_send_slug": "Or send a slug to select a competition.",
+    "choose_field": "Select a field to edit:",
+    "user_selected": "Competition selected. Choose a field:",
+    "send_value": "Send a new value.",
+    "send_slug": "Send a new slug (letters, digits, underscore).",
+    "send_datetime": "Send date/time in format {fmt} (MSK).",
+    "updated": "✅ Competition “{title}” updated • {field}.",
+    "current_info": "Current data:\n{details}",
+    "not_found": "Competition not found.",
+    "unsupported": "Field is not supported.",
+    "start_after_end": "Start time must be before the end time."
+  },
+  "fields": {
+    "title": "Title",
+    "slug": "Slug",
+    "start_at": "Start",
+    "end_at": "End",
+    "back": "⬅ Back"
+  },
+  "errors": {
+    "select_first": "Select a competition first."
+  }
+}
