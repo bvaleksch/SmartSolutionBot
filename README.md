@@ -112,7 +112,3 @@ The sample scorer for `test_competition` / `first_track` is documented in [`data
 ├─ i18n.py            # Localisation helper used across the bot
 └─ requirements.txt
 ```
-
-## License
-
-This project is distributed under the MIT license. See `LICENSE` for details.
