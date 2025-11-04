@@ -1,6 +1,7 @@
 # bot/routers/competitions.py
 import re
 import uuid
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -42,6 +43,7 @@ UTC_TZ = ZoneInfo("UTC")
 MOSCOW_LABEL = "MSK"
 PAGE_SIZE = 6
 CONTENT_ROOT = Path(__file__).resolve().parents[2] / "data" / "content"
+DEFAULT_PLACEHOLDER_COMMANDS = {"default", "placeholder", "по умолчанию", "тест"}
 
 
 # ---------- helpers ----------
@@ -184,6 +186,14 @@ def _parse_datetime(raw: str) -> Optional[datetime]:
         return None
     aware_local = local_dt.replace(tzinfo=MOSCOW_TZ)
     return aware_local.astimezone(UTC_TZ).replace(tzinfo=None)
+
+
+def _serialize_dt(dt: datetime) -> str:
+    return dt.isoformat()
+
+
+def _deserialize_dt(value: str) -> datetime:
+    return datetime.fromisoformat(value)
 
 
 async def _ensure_competition(
@@ -329,7 +339,7 @@ async def add_competition_start_at(message: Message, current_user: UserRead, sta
         await message.answer(lz.get("competitions.add.bad_datetime", fmt=DATETIME_FMT))
         return
 
-    await state.update_data(start_at=dt)
+    await state.update_data(start_at=_serialize_dt(dt))
     await state.set_state(AddCompetitionFSM.end_at)
     await message.answer(lz.get("competitions.add.step_end_at", fmt=DATETIME_FMT))
 
@@ -338,7 +348,7 @@ async def add_competition_start_at(message: Message, current_user: UserRead, sta
 async def add_competition_end_at(message: Message, current_user: UserRead, state: FSMContext) -> None:
     lz = await get_localizer_by_user(current_user)
     data = await state.get_data()
-    start_at: datetime = data["start_at"]
+    start_at = _deserialize_dt(data["start_at"])
     end_at = _parse_datetime(message.text)
     if end_at is None:
         await message.answer(lz.get("competitions.add.bad_datetime", fmt=DATETIME_FMT))
@@ -454,6 +464,23 @@ def _ensure_content_dir(language_name: str, comp_slug: str, track_slug: str) -> 
     track_dir = CONTENT_ROOT / lang_segment / comp_slug / track_slug
     track_dir.mkdir(parents=True, exist_ok=True)
     return track_dir
+
+
+def _copy_default_document(language_name: str, comp_slug: str, track_slug: str, kind: str) -> Optional[str]:
+    lang_key = _lang_key(language_name) or language_name
+    source = CONTENT_ROOT / (lang_key or "") / f"{kind}.html"
+    if not source.exists():
+        return None
+    dest_dir = _ensure_content_dir(language_name, comp_slug, track_slug)
+    dest_path = dest_dir / f"{kind}.html"
+    shutil.copyfile(source, dest_path)
+    return dest_path.relative_to(CONTENT_ROOT).as_posix()
+
+
+def _is_default_request(text: Optional[str]) -> bool:
+    if not text:
+        return False
+    return text.strip().lower() in DEFAULT_PLACEHOLDER_COMMANDS
 
 
 async def _save_html_document(bot: Bot, document: Document, language_name: str, comp_slug: str, track_slug: str, kind: str) -> str:
@@ -593,6 +620,43 @@ async def track_about_file(message: Message, current_user: UserRead, state: FSMC
     await message.answer(lz.get("competitions.track.step_rule", language=lang_title))
 
 
+@router.message(TrackCreateFSM.about, F.text)
+async def track_about_text(message: Message, current_user: UserRead, state: FSMContext) -> None:
+    lz = await get_localizer_by_user(current_user)
+    raw = (message.text or "").strip()
+    if not _is_default_request(raw):
+        await track_about_expect_html(message, current_user, state)
+        return
+
+    data = await state.get_data()
+    comp_slug = data.get("target_competition_slug")
+    track_slug = data.get("track_slug")
+    lang_info = _current_language_info(data)
+    if not comp_slug or not track_slug or not lang_info:
+        await message.answer(lz.get("competitions.edit.not_found"))
+        await state.clear()
+        return
+
+    lang_name = lang_info.get("name")
+    lang_title = lang_info.get("title") or lang_name
+    stored = _copy_default_document(lang_name, comp_slug, track_slug, "about")
+    if stored is None:
+        await message.answer(lz.get("competitions.track.default_missing"))
+        return
+
+    about_files = dict(data.get("track_about_files") or {})
+    about_files[_lang_key(lang_name)] = stored
+    await state.update_data(track_about_files=about_files)
+    if lang_title:
+        page_label = lz.get("competitions.track.page_about")
+        await message.answer(
+            lz.get("competitions.track.default_placeholder", page=page_label, language=lang_title)
+        )
+        await message.answer(lz.get("competitions.track.testing_warning"))
+    await state.set_state(TrackCreateFSM.rule)
+    await message.answer(lz.get("competitions.track.step_rule", language=lang_title))
+
+
 @router.message(TrackCreateFSM.about)
 async def track_about_expect_html(message: Message, current_user: UserRead, state: FSMContext) -> None:
     lz = await get_localizer_by_user(current_user)
@@ -647,6 +711,48 @@ async def track_rule_file(message: Message, current_user: UserRead, state: FSMCo
     await message.answer(lz.get("competitions.track.step_instruction", language=lang_title))
 
 
+@router.message(TrackCreateFSM.rule, F.text)
+async def track_rule_text(message: Message, current_user: UserRead, state: FSMContext) -> None:
+    lz = await get_localizer_by_user(current_user)
+    raw = (message.text or "").strip()
+    if not _is_default_request(raw):
+        await track_rule_expect_html(message, current_user, state)
+        return
+
+    data = await state.get_data()
+    comp_slug = data.get("target_competition_slug")
+    track_slug = data.get("track_slug")
+    lang_info = _current_language_info(data)
+    if not comp_slug or not track_slug or not lang_info:
+        await message.answer(lz.get("competitions.edit.not_found"))
+        await state.clear()
+        return
+
+    lang_name = lang_info.get("name")
+    lang_title = lang_info.get("title") or lang_name
+    stored = _copy_default_document(lang_name, comp_slug, track_slug, "rule")
+    if stored is None:
+        await message.answer(lz.get("competitions.track.default_missing"))
+        return
+
+    about_files = dict(data.get("track_about_files") or {})
+    rule_files = dict(data.get("track_rule_files") or {})
+    if _lang_key(lang_name) not in about_files:
+        await message.answer(lz.get("competitions.track.missing_file", language=lang_title))
+        return
+
+    rule_files[_lang_key(lang_name)] = stored
+    await state.update_data(track_rule_files=rule_files)
+    if lang_title:
+        page_label = lz.get("competitions.track.page_rules")
+        await message.answer(
+            lz.get("competitions.track.default_placeholder", page=page_label, language=lang_title)
+        )
+        await message.answer(lz.get("competitions.track.testing_warning"))
+    await state.set_state(TrackCreateFSM.instruction)
+    await message.answer(lz.get("competitions.track.step_instruction", language=lang_title))
+
+
 @router.message(TrackCreateFSM.rule)
 async def track_rule_expect_html(message: Message, current_user: UserRead, state: FSMContext) -> None:
     lz = await get_localizer_by_user(current_user)
@@ -688,6 +794,30 @@ async def track_instruction_text(message: Message, current_user: UserRead, state
     data = await state.get_data()
     lang_info = _current_language_info(data) or {}
     lang_title = lang_info.get("title") or lang_info.get("name") or ""
+    if _is_default_request(raw):
+        comp_slug = data.get("target_competition_slug")
+        track_slug = data.get("track_slug")
+        lang_name = lang_info.get("name")
+        if not comp_slug or not track_slug or not lang_name:
+            await message.answer(lz.get("competitions.edit.not_found"))
+            await state.clear()
+            return
+        stored = _copy_default_document(lang_name, comp_slug, track_slug, "instruction")
+        if stored is None:
+            await message.answer(lz.get("competitions.track.default_missing"))
+            return
+        instruction_files = dict(data.get("track_instruction_files") or {})
+        instruction_files[_lang_key(lang_name)] = stored
+        await state.update_data(track_instruction_files=instruction_files)
+        if lang_title:
+            page_label = lz.get("competitions.track.page_instruction")
+            await message.answer(
+                lz.get("competitions.track.default_placeholder", page=page_label, language=lang_title)
+            )
+            await message.answer(lz.get("competitions.track.testing_warning"))
+        await _advance_or_finalize_track(message, current_user, state)
+        return
+
     if raw not in {"-", "skip", "Skip"}:
         if lang_title:
             await message.answer(lz.get("competitions.track.expect_instruction", language=lang_title))

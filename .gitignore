@@ -36,4 +36,17 @@ dist/
 # Bot data
 /data/submissions/
 /data/action.json
+/data/content/*
+!/data/content/
+!/data/content/english/
+!/data/content/russian/
 
+# keep only default placeholders under content
+/data/content/english/*
+!/data/content/english/about.html
+!/data/content/english/rule.html
+!/data/content/english/instruction.html
+/data/content/russian/*
+!/data/content/russian/about.html
+!/data/content/russian/rule.html
+!/data/content/russian/instruction.html

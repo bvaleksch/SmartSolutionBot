@@ -131,6 +131,7 @@ class UserKeyboardFactory:
             btns = [["buttons.user", "buttons.team"],
                     ["buttons.competition", "buttons.submission"],
                     ["buttons.help", "buttons.profile"],
+                    ["buttons.leaderboard"],
                     ["buttons.change_language"]]
         elif user.ui_mode == UiMode.COMPETITION:
             btns = [["buttons.add_competition", "buttons.edit_competition"],

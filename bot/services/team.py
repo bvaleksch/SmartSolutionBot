@@ -221,7 +221,7 @@ class TeamService:
 		if membership:
 			teams = self._user_teams.setdefault(membership.user_id, [])
 			if membership.team_id not in teams:
-				teams.append(membership.team_id)
+				self._user_teams[membership.user_id].append(membership.team_id)
 
 
 	async def get_membership(self, user_id: UUID, team_id: UUID) -> Optional[TeamUserRead]:

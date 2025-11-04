@@ -2,6 +2,14 @@
   "common": {
     "cancelled": "Action cancelled."
   },
+  "admin_lb": {
+    "pick_comp": "📊 Choose a competition (page {page}/{pages}).",
+    "empty": "There are no competitions yet.",
+    "pick_track": "Select a track in “{competition}” (page {page}/{pages}).",
+    "track_item": "{title} — sort {direction}",
+    "no_tracks": "This competition has no tracks yet.",
+    "cancelled": "Leaderboard selection cancelled."
+  },
   "mode": {
     "enter": "🏁 Competition admin mode — choose an option."
   },
@@ -30,8 +38,8 @@
     "slug_exists": "A track with this slug already exists for the competition. Send another one.",
     "step_max_contestants": "Send the max number of contestants in a team (or '-' to use default 3).",
     "step_max_submissions": "Send the total submission limit for this track.",
-    "step_about": "Send the HTML file for the track “About” page ({language}).",
-    "step_rule": "Send the HTML file for the track rules page ({language}).",
+    "step_about": "Send the HTML file for the track “About” page ({language}). Type 'default' to use placeholder testing content.",
+    "step_rule": "Send the HTML file for the track rules page ({language}). Type 'default' to use placeholder testing content.",
     "expect_html": "Please send an HTML file ({language}).",
     "expect_html_generic": "Please send an HTML file.",
     "about_received": "About page file received ({language}).",
@@ -48,7 +56,7 @@
     "item": "  • {title} ({slug}) — team limit {max_contestants}, submissions limit {max_submissions}",
     "empty": "No tracks yet.",
     "need_one": "Add at least one track before leaving this mode.",
-    "step_instruction": "Send the HTML file for the submission instructions ({language}).\nSend '-' to skip.",
+    "step_instruction": "Send the HTML file for the submission instructions ({language}).\nSend '-' to skip. Type 'default' to use placeholder testing content.",
     "instruction_received": "Instruction file received ({language}).",
     "instruction_skipped": "Instruction skipped ({language}).",
     "expect_instruction": "Please send an HTML instruction file or '-' to skip ({language}).",
@@ -56,7 +64,13 @@
     "instruction_page_title": "{title} — Instructions ({language})",
     "instructions_saved": "Instruction pages saved.",
     "step_sort_by": "Send how values should be sorted: 'asc' for ascending or 'desc' for descending.",
-    "bad_sort_by": "Please send “asc” or “desc”."
+    "bad_sort_by": "Please send “asc” or “desc”.",
+    "default_placeholder": "⚠️ Placeholder testing content inserted for {page} ({language}).",
+    "testing_warning": "This content is for testing only. Replace it with real HTML before launching.",
+    "default_missing": "Placeholder files are missing on disk. Please upload an HTML file instead.",
+    "page_about": "About",
+    "page_rules": "Rules",
+    "page_instruction": "Instruction"
   },
   "edit": {
     "pick_competition": "👑 Edit competition • page {page}/{pages}\nChoose from the list or send a slug.",
