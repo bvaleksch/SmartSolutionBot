@@ -56,6 +56,7 @@ class AutoJudgeService:
 		self._scorers: Dict[str, _Scorer] = {}
 		self._submission_service = None
 		self._results: Dict[uuid.UUID, AutoJudgeResult] = {}
+		self._judge_lock: asyncio.Lock | None = None
 		self._initialized = True
 
 	def register(self, track_slug: str) -> Callable[[_Scorer], _Scorer]:
@@ -149,6 +150,13 @@ class AutoJudgeService:
 			self._submission_service = SubmissionService()
 		return self._submission_service
 
+	def _get_judge_lock(self) -> asyncio.Lock:
+		lock = self._judge_lock
+		if lock is None:
+			lock = asyncio.Lock()
+			self._judge_lock = lock
+		return lock
+
 	async def _auto_from_submission(self, created: SubmissionRead, payload: SubmissionCreate) -> None:
 		"""Resolve the submission context and trigger a scorer if one is registered."""
 		from smart_solution.bot.services.team import TeamService
@@ -195,12 +203,14 @@ class AutoJudgeService:
 			except ValueError:
 				pass
 
-		result = await self.evaluate_submission(
-			submission=created,
-			team=team,
-			track=track,
-			file_path=file_path,
-		)
+		lock = self._get_judge_lock()
+		async with lock:
+			result = await self.evaluate_submission(
+				submission=created,
+				team=team,
+				track=track,
+				file_path=file_path,
+			)
 		if result is not None:
 			self._results[created.id] = result
 			logger.info(
