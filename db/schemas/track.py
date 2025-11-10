@@ -16,6 +16,7 @@ class TrackBase(OrmModel):
 
 class TrackCreate(TrackBase): ...
 class TrackUpdate(OrmModel):
+    id: uuid.UUID
     sort_by: SortDirection | Missing = Missing()
     slug: str | Missing = Missing()
     title: str | Missing | None = Missing()

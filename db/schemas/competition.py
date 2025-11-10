@@ -13,6 +13,7 @@ class CompetitionBase(OrmModel):
 
 class CompetitionCreate(CompetitionBase): ...
 class CompetitionUpdate(OrmModel):
+    id: uuid.UUID
     title: str | Missing = Missing()
     start_at: datetime | Missing = Missing()
     end_at: datetime | Missing = Missing()

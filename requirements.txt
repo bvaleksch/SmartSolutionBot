@@ -3,3 +3,11 @@ python-dotenv>=1.2.1
 SQLAlchemy>=2.0.44
 asyncpg>=0.30
 aiogram-sqlalchemy-storage
+
+# Evaluate submission
+accelerate
+transformers
+huggingface_hub
+torch
+datasets
+transformers[sentencepiece]

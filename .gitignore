@@ -42,6 +42,8 @@ dist/
 !/data/content/russian/
 
 # keep only default placeholders under content
+/llm_models/cache/
+/llm_models/
 /data/content/english/*
 !/data/content/english/about.html
 !/data/content/english/rule.html
