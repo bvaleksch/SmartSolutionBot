@@ -30,7 +30,9 @@
     "file_missing": "The archive for this submission is missing.",
     "not_found": "Submission is not available.",
     "file_caption": "Submission {title}",
-    "value": "Value: {value}"
+    "value": "Value: {value}",
+    "chunk_start": "Archive size is {size} (limit {limit}). Sending {parts} parts named {first} … {last}.",
+    "chunk_caption": "Part {index}/{total}.\nLinux/macOS: cat {base}.part* > {base}\nWindows (CMD): copy /b {base}.part* {base}"
   },
   "rate": {
     "list_title": "<b>Pending submissions</b>\nPage {page} of {pages} (total: {total})",

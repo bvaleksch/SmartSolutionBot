@@ -30,7 +30,9 @@
     "file_missing": "Архив этой посылки не найден.",
     "not_found": "Посылка недоступна.",
     "file_caption": "Посылка {title}",
-    "value": "Значение: {value}"
+    "value": "Значение: {value}",
+    "chunk_start": "Размер архива {size} (лимит {limit}). Отправляю {parts} частей: {first} … {last}.",
+    "chunk_caption": "Часть {index}/{total}.\nLinux/macOS: cat {base}.part* > {base}\nWindows (CMD): copy /b {base}.part* {base}"
   },
   "rate": {
     "list_title": "<b>Посылки в ожидании</b>\nСтраница {page} из {pages} (всего: {total})",

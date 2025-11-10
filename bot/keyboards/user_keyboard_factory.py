@@ -107,7 +107,7 @@ class UserKeyboardFactory:
                 row.insert(0, "buttons.change_team")
             btns.append(row)
         elif user.ui_mode == UiMode.SUBMIT:
-            btns = [["buttons.instructions"],
+            btns = [["buttons.instructions", "buttons.send_parts"],
                     ["buttons.back"]]
         elif user.ui_mode == UiMode.CHANGE_LANGUAGE:
             btns = self._change_language()

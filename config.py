@@ -25,6 +25,8 @@ class Settings:
         self.ban_threshold = int(os.getenv("BAN_THRESHOLD", "12"))
         self.ban_duration_seconds = int(os.getenv("BAN_DURATION_SECONDS", "600"))
         self.period = int(os.getenv("PERIOD", "5"))
+        part_limit_mb = float(os.getenv("SUBMISSION_FILE_PART_LIMIT_MB", "48"))
+        part_limit_mb = max(1.0, part_limit_mb)
+        self.submission_file_part_max_bytes = int(part_limit_mb * 1024 * 1024)
 
         self._initialized = True
-

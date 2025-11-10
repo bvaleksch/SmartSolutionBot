@@ -1,6 +1,7 @@
 # bot/routers/submissions_admin.py
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 import uuid
 from pathlib import Path
@@ -16,8 +17,10 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from aiogram.types import FSInputFile
+from aiogram.types import FSInputFile, BufferedInputFile
+from aiogram.exceptions import TelegramRetryAfter
 
+from smart_solution.config import Settings
 from smart_solution.db.enums import UiMode, UserRole, SubmissionStatus
 from smart_solution.db.schemas.user import UserRead
 from smart_solution.db.schemas.submission import SubmissionRead, SubmissionUpdate
@@ -32,6 +35,7 @@ router = Router(name="submissions_admin")
 
 PAGE_SIZE = 8
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
+FILE_PART_LIMIT_BYTES = max(1_048_576, Settings().submission_file_part_max_bytes)
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 UTC_TZ = ZoneInfo("UTC")
@@ -78,6 +82,18 @@ def _format_value(value: Optional[float]) -> str:
 	if value is None:
 		return "—"
 	return f"{value:.4f}".rstrip("0").rstrip(".") or "0"
+
+
+def _format_bytes(num_bytes: int) -> str:
+	size = float(max(num_bytes, 0))
+	units = ["B", "KB", "MB", "GB", "TB"]
+	for unit in units:
+		if size < 1024.0 or unit == units[-1]:
+			if unit == "B":
+				return f"{int(size)} {unit}"
+			return f"{size:.1f} {unit}"
+		size /= 1024.0
+	return f"{size:.1f} TB"
 
 
 def _format_user_label(user) -> str:
@@ -277,6 +293,82 @@ def _submission_file_path(submission: SubmissionRead) -> Path:
 	return path
 
 
+async def _send_submission_file(message: Message, path: Path, lz, submission_id: uuid.UUID, title: str) -> None:
+	chunk_size = max(1, FILE_PART_LIMIT_BYTES)
+	try:
+		total_size = path.stat().st_size
+	except OSError:
+		total_size = 0
+
+	if total_size <= chunk_size:
+		file = FSInputFile(path, filename=path.name)
+		await message.answer_document(
+			file,
+			caption=lz.get("submissions.detail.file_caption", submission_id=str(submission_id), title=title),
+		)
+		return
+
+	total_parts = max(1, (total_size + chunk_size - 1) // chunk_size)
+	width = len(str(total_parts))
+	first_part = f"{path.name}.part{1:0{width}d}"
+	last_part = f"{path.name}.part{total_parts:0{width}d}"
+	await message.answer(
+		lz.get(
+			"submissions.detail.chunk_start",
+			size=_format_bytes(total_size),
+			limit=_format_bytes(chunk_size),
+			parts=str(total_parts),
+			first=first_part,
+			last=last_part,
+		)
+	)
+	await _send_document_parts(message, path, total_parts, width, chunk_size, lz)
+
+
+async def _send_document_parts(
+	message: Message,
+	path: Path,
+	total_parts: int,
+	width: int,
+	chunk_size: int,
+	lz,
+) -> None:
+	base_name = path.name
+	with path.open("rb") as src:
+		for idx in range(1, total_parts + 1):
+			chunk = src.read(chunk_size)
+			if not chunk:
+				break
+			filename = f"{base_name}.part{idx:0{width}d}"
+			caption = None
+			if idx == 1:
+				caption = lz.get(
+					"submissions.detail.chunk_caption",
+					index=str(idx),
+					total=str(total_parts),
+					base=base_name,
+				)
+			await _deliver_chunk(message, chunk, filename, caption)
+
+
+async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: str | None) -> None:
+	for attempt in range(3):
+		try:
+			await message.answer_document(
+				BufferedInputFile(data, filename=filename),
+				caption=caption,
+			)
+			return
+		except TelegramRetryAfter as exc:
+			delay = getattr(exc, "retry_after", 2) or 2
+			await asyncio.sleep(max(1, int(delay)))
+	# give up with standard exception
+	await message.answer_document(
+		BufferedInputFile(data, filename=filename),
+		caption=caption,
+	)
+
+
 @router.message(ActionLike("buttons.submission:home:admin"))
 async def submissions_mode_start(message: Message, current_user: UserRead, state: FSMContext) -> None:
 	if not _is_admin(current_user):
@@ -389,10 +481,12 @@ async def submissions_download(cq: CallbackQuery, current_user: UserRead) -> Non
 		await cq.answer(lz.get("submissions.detail.not_found"), show_alert=True)
 		return
 
-	file = FSInputFile(path, filename=path.name)
-	await cq.message.answer_document(
-		file,
-		caption=lz.get("submissions.detail.file_caption", submission_id=str(submission_id), title=submission.title),
+	await _send_submission_file(
+		cq.message,
+		path,
+		lz,
+		submission_id=submission_id,
+		title=submission.title,
 	)
 	await cq.answer()
 
