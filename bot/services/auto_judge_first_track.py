@@ -190,17 +190,15 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
 		main_exists,
 	)
 	cmd = [
-		"docker",
-		"run",
-		"--rm",
-		"-v",
-		f"{tmp_dir}:{WORKDIR_CONTAINER}",
-		"-w",
-		workdir,
-		DOCKER_IMAGE,
-		"python3",
-		command_main,
-		"input.csv",
+	    "docker",
+	    "run",
+	    "--rm",
+	    "--network=none",
+	    "-v", f"{tmp_dir}:{WORKDIR_CONTAINER}",
+	    "-w", workdir,
+	    DOCKER_IMAGE,
+	    "python3",
+	    command_main
 	]
 	try:
 		completed = subprocess.run(
