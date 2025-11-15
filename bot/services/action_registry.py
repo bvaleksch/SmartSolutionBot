@@ -32,7 +32,7 @@ class ActionRegistry:
 	def _load(self) -> None:
 		try:
 			if self._path.exists():
-				data = json.loads(self._path.read_text())
+				data = json.loads(self._path.read_text(encoding="utf-8"))
 				if isinstance(data, list):
 					for item in data:
 						if not isinstance(item, dict):
@@ -53,7 +53,7 @@ class ActionRegistry:
 				{"key": list(key), "action": value}
 				for key, value in self._store.items()
 			]
-			self._path.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+			self._path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 		except Exception:
 			return
 

@@ -4,6 +4,7 @@ from uuid import UUID
 from typing import Callable, Awaitable, Any, Dict, List, Self, ClassVar, Optional
 from aiogram import BaseMiddleware
 from smart_solution.config import Settings
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class RateLimitMiddleware(BaseMiddleware):
 	"""
@@ -184,3 +185,5 @@ class RateLimitMiddleware(BaseMiddleware):
 
 		return await handler(event, data)
 
+
+instrument_service_class(RateLimitMiddleware, prefix="middleware.rate_limit", actor_fields=("current_user",))

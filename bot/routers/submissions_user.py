@@ -1,4 +1,5 @@
 # bot/routers/submissions_user.py
+import asyncio
 import logging
 import re
 import shutil
@@ -27,11 +28,14 @@ from smart_solution.bot.services.page import PageService
 from smart_solution.bot.services.submission import SubmissionService
 from smart_solution.bot.services.team import TeamService
 from smart_solution.bot.services.user import UserService
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="contestant_submission")
 SUBMISSIONS_ROOT = Path(__file__).resolve().parents[2] / "data" / "submissions"
 FILE_PART_LIMIT_BYTES = max(1_048_576, Settings().submission_file_part_max_bytes)
 MULTIPART_SAMPLE_FILENAME = "solution.zip"
+_AUTO_RESULT_POLL_INTERVAL = 1.0
+_AUTO_RESULT_TIMEOUT = 300.0
 logger = logging.getLogger(__name__)
 ZIP_PART_PATTERN = re.compile(r".+\.zip\.part\d+$", re.IGNORECASE)
 
@@ -45,6 +49,8 @@ class SubmissionPlan:
     sequence_number: int
     dest_path: Path
     relative_path: str
+    track_slug: Optional[str]
+    has_auto_judge: bool
 
 
 class SubmissionMultipartFSM(StatesGroup):
@@ -231,24 +237,8 @@ async def receive_submission_document(message: Message, current_user: UserRead, 
         state,
     )
 
-    auto_result = auto_judge.pop_result(submission.id)
-    if auto_result is not None:
-        if auto_result.success:
-            status_text = (
-                lz.get(f"submissions.status.{auto_result.status.value}")
-                if auto_result.status
-                else lz.get("team_user.submit.auto_unknown_status")
-            )
-            value_text = _format_value(auto_result.value)
-            reply = auto_result.message or lz.get(
-                "team_user.submit.auto_success",
-                status=status_text,
-                value=value_text,
-            )
-            await message.answer(reply)
-        else:
-            reply = auto_result.message or lz.get("team_user.submit.auto_failed")
-            await message.answer(reply)
+    if plan.has_auto_judge:
+        _schedule_auto_result_notification(message, submission.id, lz)
 
 
 @router.message(ActionLike("buttons.instructions:submit:contestant"))
@@ -318,7 +308,7 @@ async def multipart_set_total(message: Message, current_user: UserRead, state: F
         await message.answer(lz.get("team_user.submit.multipart_invalid_total"))
         return
 
-    if total < 2 or total > 20:
+    if total < 2 or total > 16:
         await message.answer(lz.get("team_user.submit.multipart_invalid_total"))
         return
 
@@ -530,6 +520,8 @@ def _plan_to_dict(plan: SubmissionPlan) -> dict:
         "sequence_number": plan.sequence_number,
         "dest_path": str(plan.dest_path),
         "relative_path": plan.relative_path,
+        "track_slug": plan.track_slug or "",
+        "has_auto_judge": "1" if plan.has_auto_judge else "0",
     }
 
 
@@ -545,6 +537,8 @@ def _plan_from_dict(data: Optional[dict]) -> Optional[SubmissionPlan]:
             sequence_number=int(data["sequence_number"]),
             dest_path=Path(data["dest_path"]),
             relative_path=data["relative_path"],
+            track_slug=(data.get("track_slug") or None),
+            has_auto_judge=(data.get("has_auto_judge") == "1"),
         )
     except (KeyError, ValueError):
         return None
@@ -627,6 +621,15 @@ async def _prepare_submission_plan(
         updated = await _return_home(message, current_user, lz.get("team_user.submit.no_membership"), state)
         return None, updated
 
+    track_slug: Optional[str] = None
+    has_auto_judge = False
+    if team.track_id:
+        comp_svc = CompetitionService()
+        track = await comp_svc.get_track_by_id(team.track_id)
+        if track and track.slug:
+            track_slug = track.slug
+            has_auto_judge = auto_judge.has_scorer(track_slug)
+
     submission_service = SubmissionService()
     existing_count = await submission_service.count_submissions(team)
     sequence_number = existing_count + 1
@@ -648,6 +651,8 @@ async def _prepare_submission_plan(
         sequence_number=sequence_number,
         dest_path=dest_path,
         relative_path=str(relative_path),
+        track_slug=track_slug,
+        has_auto_judge=has_auto_judge,
     )
     return plan, current_user
 
@@ -700,24 +705,8 @@ async def _assemble_and_submit_parts(
         lz.get("team_user.submit.saved", submission_id=str(submission.id), title=plan.title),
     )
 
-    auto_result = auto_judge.pop_result(submission.id)
-    if auto_result is not None:
-        if auto_result.success:
-            status_text = (
-                lz.get(f"submissions.status.{auto_result.status.value}")
-                if auto_result.status
-                else lz.get("team_user.submit.auto_unknown_status")
-            )
-            value_text = _format_value(auto_result.value)
-            reply = auto_result.message or lz.get(
-                "team_user.submit.auto_success",
-                status=status_text,
-                value=value_text,
-            )
-            await message.answer(reply)
-        else:
-            reply = auto_result.message or lz.get("team_user.submit.auto_failed")
-            await message.answer(reply)
+    if plan.has_auto_judge:
+        _schedule_auto_result_notification(message, submission.id, lz)
 
 
 def _cleanup_tmp_dir(path: Path) -> None:
@@ -753,6 +742,54 @@ def _format_value(value: Optional[float]) -> str:
         return "—"
     text = f"{value:.4f}".rstrip("0").rstrip(".")
     return text or "0"
+
+
+def _schedule_auto_result_notification(message: Message, submission_id: uuid.UUID, lz) -> None:
+    """Fire-and-forget task that notifies the user when auto-judge finishes."""
+    task = asyncio.create_task(_wait_for_auto_result(message, submission_id, lz))
+    task.add_done_callback(_log_auto_result_task_error)
+
+
+async def _wait_for_auto_result(message: Message, submission_id: uuid.UUID, lz) -> None:
+    deadline = time.monotonic() + _AUTO_RESULT_TIMEOUT
+    while True:
+        result = auto_judge.pop_result(submission_id)
+        if result is not None:
+            await _send_auto_result_message(message, result, lz)
+            return
+        if time.monotonic() >= deadline:
+            logger.warning("Auto-judge result for submission %s not ready before timeout", submission_id)
+            return
+        await asyncio.sleep(_AUTO_RESULT_POLL_INTERVAL)
+
+
+async def _send_auto_result_message(message: Message, result, lz) -> None:
+    if result.success:
+        status_text = (
+            lz.get(f"submissions.status.{result.status.value}")
+            if result.status
+            else lz.get("team_user.submit.auto_unknown_status")
+        )
+        value_text = _format_value(result.value)
+        reply = result.message or lz.get(
+            "team_user.submit.auto_success",
+            status=status_text,
+            value=value_text,
+        )
+        await message.answer(reply)
+        return
+
+    reply = result.message or lz.get("team_user.submit.auto_failed")
+    await message.answer(reply)
+
+
+def _log_auto_result_task_error(task: asyncio.Task) -> None:
+    try:
+        task.result()
+    except asyncio.CancelledError:
+        logger.warning("Auto-judge notification task cancelled")
+    except Exception:
+        logger.exception("Auto-judge notification task failed")
 
 
 async def _safe_edit_progress(message: Optional[Message], text: str) -> None:
@@ -869,3 +906,6 @@ async def _download_with_progress(
             size=_format_size(downloaded),
         ),
     )
+
+
+instrument_router_module(globals(), prefix="submissions_user")

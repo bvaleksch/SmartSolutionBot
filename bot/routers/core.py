@@ -2,7 +2,7 @@
 import uuid
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from typing import Optional
 from smart_solution.db.schemas.user import UserRead, UserUpdate
 from smart_solution.i18n import lang_code2language, Localizer
@@ -13,7 +13,7 @@ from smart_solution.bot.services.competition import CompetitionService
 from smart_solution.bot.keyboards.user_keyboard_factory import UserKeyboardFactory
 from smart_solution.db.enums import UiMode, UserRole
 from smart_solution.bot.filters.action_like import ActionLike
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="core")
 
@@ -173,3 +173,5 @@ async def start(message: Message, current_user: UserRead, is_whitelisted: bool) 
 
     await message.answer(greeting_text, reply_markup=(await UserKeyboardFactory().build_for_user(current_user)))
 
+
+instrument_router_module(globals(), prefix="core")

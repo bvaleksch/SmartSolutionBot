@@ -4,6 +4,7 @@ from typing import Self, ClassVar, Optional
 from smart_solution.db.schemas.user import UserRead, UserCreate, UserUpdate
 from smart_solution.db.enums import UiMode, UserRole
 from smart_solution.db.database import DataBase
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class UserService:
     _instance: ClassVar[Optional["UserService"]] = None
@@ -89,3 +90,10 @@ class UserService:
 
         return user
 
+
+instrument_service_class(
+    UserService,
+    prefix="services.user",
+    actor_fields=("user", "actor"),
+    exclude={"get_user"},
+)

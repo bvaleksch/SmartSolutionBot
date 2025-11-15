@@ -12,6 +12,7 @@ from smart_solution.db.schemas.page import (
     PageUpdate,
 )
 from smart_solution.db.enums import PageType
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 
 class PageService:
@@ -137,3 +138,6 @@ class PageService:
 
     def get_content_path(self, file_basename: str) -> Path:
         return self._content_root / file_basename
+
+
+instrument_service_class(PageService, prefix="services.page")

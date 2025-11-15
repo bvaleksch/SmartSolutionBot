@@ -48,10 +48,18 @@ for English and Russian (columns: `id` UUID, `name` varchar, `title` varchar).
 Insert them manually, choosing your own UUIDs:
 
 ```sql
-INSERT INTO language (id, name, title) VALUES
-  ('<english-uuid>', 'english', 'English 🇬🇧'),
-  ('<russian-uuid>', 'russian', 'Русский 🇷🇺')
-ON CONFLICT (id) DO NOTHING;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS language (
+    id    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name  VARCHAR(32)  NOT NULL UNIQUE,
+    title VARCHAR(128) NOT NULL
+);
+
+INSERT INTO language (name, title) VALUES
+  ('english', 'English 🇬🇧'),
+  ('russian', 'Русский 🇷🇺')
+ON CONFLICT (name) DO NOTHING;
 ```
 
 These records are required for localisation lookups during bot start-up. Update

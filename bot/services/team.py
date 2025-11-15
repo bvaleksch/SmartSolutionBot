@@ -9,6 +9,7 @@ from smart_solution.db.database import DataBase
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.services.submission import SubmissionService
 from smart_solution.bot.services.competition import CompetitionService
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 
 class MembershipDict:
@@ -265,3 +266,6 @@ class TeamService:
 				return self._memberships.get((user.id, user.active_team_id)) is not None
 
 		return False
+
+
+instrument_service_class(TeamService, prefix="services.team")

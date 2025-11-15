@@ -28,6 +28,8 @@ from smart_solution.db.schemas.language import LanguageRead
 from smart_solution.config import Settings
 from smart_solution.db.models.submission import Submission
 from smart_solution.db.schemas.submission import SubmissionRead, SubmissionCreate, SubmissionUpdate
+from smart_solution.db.models.audit_log import AuditLog
+from smart_solution.db.schemas.audit_log import AuditLogCreate, AuditLogRead
 from smart_solution.utils.sentinels import MISSING
 
 
@@ -1275,3 +1277,52 @@ class DataBase():
                 await s.flush()
                 await s.refresh(db_obj)
                 return PageRead.model_validate(db_obj)
+
+    # ---------------------------------
+    # Audit log helpers
+    # ---------------------------------
+
+    async def create_audit_log(self, payload: AuditLogCreate) -> AuditLogRead:
+        """Persist a new audit log entry."""
+        async with self.session() as s:
+            record = AuditLog(
+                actor_id=payload.actor_id,
+                action=payload.action,
+                payload=dict(payload.payload or {}),
+            )
+            s.add(record)
+            await s.flush()
+            await s.refresh(record)
+            return AuditLogRead.model_validate(record)
+
+    async def list_audit_logs(
+        self,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        actor_id: uuid.UUID | None = None,
+        action: str | None = None,
+    ) -> tuple[list[AuditLogRead], int]:
+        """Return paginated audit log entries filtered by actor/action."""
+        limit = max(0, int(limit))
+        offset = max(0, int(offset))
+
+        async with self.session() as s:
+            stmt = select(AuditLog).order_by(AuditLog.created_at.desc())
+            count_stmt = select(func.count(AuditLog.id))
+            if actor_id:
+                stmt = stmt.where(AuditLog.actor_id == actor_id)
+                count_stmt = count_stmt.where(AuditLog.actor_id == actor_id)
+            if action:
+                stmt = stmt.where(AuditLog.action == action)
+                count_stmt = count_stmt.where(AuditLog.action == action)
+
+            if limit:
+                stmt = stmt.limit(limit)
+            if offset:
+                stmt = stmt.offset(offset)
+
+            rows = (await s.execute(stmt)).scalars().all()
+            total = int((await s.execute(count_stmt)).scalar_one())
+
+        return [AuditLogRead.model_validate(row) for row in rows], total

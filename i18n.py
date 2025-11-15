@@ -42,7 +42,7 @@ class Localizer:
 		if not keys:
 			raise KeyError(f"Key(key is empty) {key} is not found")
 
-		with open(path) as file:
+		with open(path, encoding="utf-8") as file:
 			ans = json.load(file)
 
 		for k in keys:

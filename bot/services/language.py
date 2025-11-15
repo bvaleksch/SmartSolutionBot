@@ -5,6 +5,7 @@ from typing import Self, ClassVar, Dict, Optional, Union, Iterable
 from smart_solution.db.database import DataBase
 from smart_solution.config import Settings
 from smart_solution.db.schemas.language import LanguageRead
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 
 class LanguageService:
@@ -146,3 +147,6 @@ class LanguageService:
         """
         await self.ensure_cache()
         return dict(self._by_id)
+
+instrument_service_class(LanguageService, prefix="services.language")
+

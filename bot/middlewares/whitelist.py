@@ -2,6 +2,7 @@
 from typing import Callable, Awaitable, Any, Dict
 from aiogram import BaseMiddleware
 from smart_solution.config import Settings
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class WhitelistMiddleware(BaseMiddleware):
 	async def __call__(self, 
@@ -15,5 +16,8 @@ class WhitelistMiddleware(BaseMiddleware):
 			data["is_whitelisted"] = user.tg_username in Settings().whitelist
 
 		return await handler(event, data)
+
+
+instrument_service_class(WhitelistMiddleware, prefix="middleware.whitelist", actor_fields=("current_user",))
 
 		

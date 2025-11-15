@@ -6,6 +6,8 @@ from aiogram.types import User as TgUser
 from smart_solution.db.schemas.user import UserRead, UserCreate, UserUpdate
 from smart_solution.bot.services.user import UserService
 from smart_solution.db.enums import UiMode
+from smart_solution.bot.services.audit_log import audit_logger
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class UserMiddleware(BaseMiddleware):
 	_instance: ClassVar[Optional["UserMiddleware"]] = None
@@ -40,5 +42,12 @@ class UserMiddleware(BaseMiddleware):
 			return
 
 		data["current_user"] = user
-		return await handler(event, data)
+		# bind actor context for downstream logs
+		token = audit_logger.bind_actor(user.id)
+		try:
+			return await handler(event, data)
+		finally:
+			audit_logger.unbind_actor(token)
 
+
+instrument_service_class(UserMiddleware, prefix="middleware.user", actor_fields=("current_user",))

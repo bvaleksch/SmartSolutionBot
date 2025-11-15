@@ -17,6 +17,7 @@ from smart_solution.bot.filters.action_like import ActionLike
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.keyboards.user_keyboard_factory import UserKeyboardFactory
 from smart_solution.bot.routers.utils import get_localizer_by_user
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="users_admin")
 PAGE_SIZE = 8  # deterministic paging by UUID
@@ -579,3 +580,6 @@ async def edit_user_apply_role(cq: CallbackQuery, current_user: UserRead, state:
     )
     summary = _format_user_snapshot(updated, lz)
     await cq.message.edit_text(f"{update_text}\n\n{summary}", reply_markup=_kb_edit_fields(lz))
+
+
+instrument_router_module(globals(), prefix="users")

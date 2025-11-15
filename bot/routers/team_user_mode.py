@@ -17,6 +17,7 @@ from smart_solution.bot.services.user import UserService
 from smart_solution.bot.services.team import TeamService
 from smart_solution.bot.services.competition import CompetitionService
 from smart_solution.bot.services.page import PageService
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="team_user_mode")
 
@@ -487,3 +488,6 @@ def _build_leaderboard_keyboard(page: int, total_pages: int, lz) -> InlineKeyboa
         rows.append(nav_row)
 
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+instrument_router_module(globals(), prefix="team_user_mode")

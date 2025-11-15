@@ -23,6 +23,7 @@ from smart_solution.bot.routers.utils import get_localizer_by_user
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.services.team import TeamService
 from smart_solution.bot.services.competition import CompetitionService
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="teams_admin")
 
@@ -583,3 +584,6 @@ async def edit_team_apply(message: Message, current_user: UserRead, state: FSMCo
         lz.get("teams.edit.updated", title=updated.title, field=field_name) + "\n\n" + snapshot,
         reply_markup=_kb_edit_fields(lz),
     )
+
+
+instrument_router_module(globals(), prefix="teams")

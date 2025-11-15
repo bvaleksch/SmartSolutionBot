@@ -3,6 +3,7 @@ from typing import Dict, Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import Message
 from smart_solution.bot.services.action_registry import ActionRegistry
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class ActionMiddleware(BaseMiddleware):
 	def __init__(self) -> None:
@@ -19,3 +20,5 @@ class ActionMiddleware(BaseMiddleware):
 		data["ui_action"] = action
 		return await handler(event, data)
 
+
+instrument_service_class(ActionMiddleware, prefix="middleware.action", actor_fields=("current_user",))

@@ -8,6 +8,7 @@ from smart_solution.db.schemas.team import TeamRead
 from smart_solution.db.enums import SubmissionStatus
 from smart_solution.bot.services.auto_judge import auto_judge
 from smart_solution.bot.services.submission_notifications import submission_notifier
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 class SubmissionService:
 	_instance: ClassVar[Optional["SubmissionService"]] = None
@@ -114,3 +115,6 @@ class SubmissionService:
 		for sub in items:
 			self._submission[sub.id] = sub
 		return items, total
+
+
+instrument_service_class(SubmissionService, prefix="services.submission")

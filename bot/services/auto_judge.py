@@ -18,6 +18,7 @@ from smart_solution.db.enums import SubmissionStatus, SortDirection
 from smart_solution.db.schemas.submission import SubmissionCreate, SubmissionRead, SubmissionUpdate
 from smart_solution.db.schemas.team import TeamRead
 from smart_solution.db.schemas.track import TrackRead
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 
 @dataclass(slots=True)
@@ -69,6 +70,12 @@ class AutoJudgeService:
 
 		return _decorator
 
+	def has_scorer(self, track_slug: Optional[str]) -> bool:
+		"""Check if a scorer is registered for the given track slug."""
+		if not track_slug:
+			return False
+		return track_slug.strip().lower() in self._scorers
+
 	def auto_evaluate_create(self) -> Callable[[Callable[..., Awaitable[SubmissionRead]]], Callable[..., Awaitable[SubmissionRead]]]:
 		"""Decorator that wraps ``SubmissionService.create_submission`` for auto-scoring."""
 		def _decorator(func: Callable[..., Awaitable[SubmissionRead]]) -> Callable[..., Awaitable[SubmissionRead]]:
@@ -85,10 +92,7 @@ class AutoJudgeService:
 				created = await func(service_self, *args, **kwargs)
 
 				if submission_payload is not None:
-					try:
-						await self._auto_from_submission(created, submission_payload)
-					except Exception:
-						pass
+					self._schedule_auto_judge(created, submission_payload)
 
 				return created
 
@@ -157,6 +161,20 @@ class AutoJudgeService:
 			self._judge_lock = lock
 		return lock
 
+	def _schedule_auto_judge(self, submission: SubmissionRead, payload: SubmissionCreate) -> None:
+		"""Launch auto-judge evaluation on a background task."""
+		task = asyncio.create_task(self._auto_from_submission(submission, payload))
+		task.add_done_callback(self._log_task_exception)
+
+	@staticmethod
+	def _log_task_exception(task: asyncio.Task) -> None:
+		try:
+			task.result()
+		except asyncio.CancelledError:
+			logger.warning("Auto-judge background task was cancelled")
+		except Exception:
+			logger.exception("Auto-judge background task failed")
+
 	async def _auto_from_submission(self, created: SubmissionRead, payload: SubmissionCreate) -> None:
 		"""Resolve the submission context and trigger a scorer if one is registered."""
 		from smart_solution.bot.services.team import TeamService
@@ -223,5 +241,7 @@ class AutoJudgeService:
 
 
 auto_judge = AutoJudgeService()
+
+instrument_service_class(AutoJudgeService, prefix="services.auto_judge", exclude={"register", "auto_evaluate_create"})
 
 __all__ = ["AutoJudgeResult", "AutoJudgeService", "auto_judge"]

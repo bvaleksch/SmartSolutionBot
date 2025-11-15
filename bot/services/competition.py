@@ -15,6 +15,7 @@ from smart_solution.db.schemas.track import (
     TrackUpdate,
     TrackLeaderboardRow,
 )
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 
 class CompetitionService:
@@ -179,3 +180,6 @@ class CompetitionService:
 		bucket = self._tracks_by_competition.setdefault(tr.competition_id, [])
 		if tr.id not in bucket:
 			bucket.append(tr.id)
+
+
+instrument_service_class(CompetitionService, prefix="services.competition")

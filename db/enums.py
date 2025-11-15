@@ -43,3 +43,4 @@ class UiMode(enum.StrEnum):
     CHANGE_LANGUAGE = "change_language"
     NEW_TEAM = "new_team"
     EDIT_TEAM = "edit_team"
+

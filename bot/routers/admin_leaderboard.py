@@ -15,6 +15,7 @@ from smart_solution.bot.services.team import TeamService
 from smart_solution.bot.services.user import UserService
 from smart_solution.db.enums import UiMode, UserRole, SortDirection
 from smart_solution.db.schemas.user import UserRead, UserUpdate
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 
 router = Router(name="admin_leaderboard")
@@ -241,3 +242,6 @@ async def admin_lb_track_pick(cq: CallbackQuery, current_user: UserRead, state: 
     await state.clear()
     await cq.answer()
     await cq.message.edit_text(f"{header}\n\n{body}", reply_markup=None)
+
+
+instrument_router_module(globals(), prefix="admin_leaderboard")

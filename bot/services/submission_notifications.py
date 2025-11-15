@@ -12,6 +12,7 @@ from smart_solution.db.schemas.submission import SubmissionRead, SubmissionUpdat
 from smart_solution.db.schemas.user import UserRead
 from smart_solution.db.enums import SubmissionStatus
 from smart_solution.bot.routers.utils import get_localizer_by_user
+from smart_solution.bot.services.audit_log import instrument_service_class
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +194,9 @@ class SubmissionNotificationService:
 		"""Provide the active bot instance so messages can be delivered."""
 		self._bot = bot
 		logger.info("Submission notifier bound to bot %s", getattr(bot, "id", None))
+
+
+instrument_service_class(SubmissionNotificationService, prefix="services.submission_notify", exclude={"notify_update"})
 
 
 submission_notifier = SubmissionNotificationService()

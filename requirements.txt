@@ -11,3 +11,13 @@ huggingface_hub
 torch
 datasets
 transformers[sentencepiece]
+
+# docker
+numpy
+pandas
+scikit-learn
+nltk
+transformers
+torch
+torchvision
+sentence-transformers

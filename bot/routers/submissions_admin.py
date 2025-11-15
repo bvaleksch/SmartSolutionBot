@@ -30,6 +30,7 @@ from smart_solution.bot.routers.utils import get_localizer_by_user
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.services.submission import SubmissionService
 from smart_solution.bot.services.team import TeamService
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="submissions_admin")
 
@@ -823,3 +824,6 @@ async def submissions_status_apply(cq: CallbackQuery, current_user: UserRead, st
 	else:
 		await state.clear()
 	await cq.answer()
+
+
+instrument_router_module(globals(), prefix="submissions_admin")

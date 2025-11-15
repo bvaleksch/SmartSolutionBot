@@ -28,3 +28,8 @@ class User(Base):
 
     preferred_language: Mapped[Optional["Language"]] = relationship("Language")
     memberships: Mapped[List["TeamUser"]] = relationship(back_populates="user", passive_deletes=True)
+    audit_logs: Mapped[List["AuditLog"]] = relationship(
+        "AuditLog",
+        back_populates="actor",
+        passive_deletes=True,
+    )

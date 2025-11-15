@@ -35,6 +35,7 @@ from smart_solution.bot.services.language import LanguageService
 from smart_solution.bot.services.page import PageService
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.routers.utils import get_localizer_by_user
+from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="competitions_admin")
 DATETIME_FMT = "%Y-%m-%d %H:%M"
@@ -1198,3 +1199,6 @@ async def edit_comp_apply(message: Message, current_user: UserRead, state: FSMCo
         field=field_name,
     )
     await message.answer(f"{header}\n\n{snapshot}", reply_markup=_kb_edit_fields(lz))
+
+
+instrument_router_module(globals(), prefix="competitions")
