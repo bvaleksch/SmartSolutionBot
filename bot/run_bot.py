@@ -28,6 +28,7 @@ from smart_solution.bot.routers.submissions_admin import router as SubmissionAdm
 from smart_solution.db.database import DataBase
 from smart_solution.bot.services.submission_notifications import submission_notifier
 import smart_solution.bot.services.auto_judge_first_track  # noqa: F401
+import smart_solution.bot.services.auto_judge_ai_track
 
 logging.basicConfig(level=logging.INFO)
 

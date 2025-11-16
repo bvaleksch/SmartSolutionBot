@@ -44,6 +44,7 @@ dist/
 # keep only default placeholders under content
 /llm_models/cache/
 /llm_models/
+/data/auto_judge/ai_track/
 /data/content/english/*
 !/data/content/english/about.html
 !/data/content/english/rule.html
