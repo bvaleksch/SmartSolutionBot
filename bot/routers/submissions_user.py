@@ -308,7 +308,7 @@ async def multipart_set_total(message: Message, current_user: UserRead, state: F
         await message.answer(lz.get("team_user.submit.multipart_invalid_total"))
         return
 
-    if total < 2 or total > 16:
+    if total < 2 or total > 8:
         await message.answer(lz.get("team_user.submit.multipart_invalid_total"))
         return
 

@@ -341,14 +341,12 @@ async def _send_document_parts(
 			if not chunk:
 				break
 			filename = f"{base_name}.part{idx:0{width}d}"
-			caption = None
-			if idx == 1:
-				caption = lz.get(
-					"submissions.detail.chunk_caption",
-					index=str(idx),
-					total=str(total_parts),
-					base=base_name,
-				)
+			caption = lz.get(
+				"submissions.detail.chunk_caption",
+				index=str(idx),
+				total=str(total_parts),
+				base=base_name,
+			s	)
 			await _deliver_chunk(message, chunk, filename, caption)
 
 
