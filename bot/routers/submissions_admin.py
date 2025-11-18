@@ -345,8 +345,7 @@ async def _send_document_parts(
 				"submissions.detail.chunk_caption",
 				index=str(idx),
 				total=str(total_parts),
-				base=base_name,
-			s	)
+				base=base_name)
 			await _deliver_chunk(message, chunk, filename, caption)
 
 
