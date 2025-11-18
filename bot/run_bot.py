@@ -64,7 +64,7 @@ async def main() -> None:
     async with db.engine.begin() as conn:
         await conn.run_sync(storage.metadata.create_all)
 
-    session = AiohttpSession(api=TelegramAPIServer.from_base("http://127.0.0.1:8081", is_local=True), timeout=ClientTimeout(total=3600))
+    session = AiohttpSession(api=TelegramAPIServer.from_base("http://127.0.0.1:8081", is_local=True), timeout=3600)
     bot = Bot(
         BOT_TOKEN,
         session=session,

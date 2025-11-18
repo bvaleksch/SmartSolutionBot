@@ -36,7 +36,7 @@ router = Router(name="submissions_admin")
 
 PAGE_SIZE = 8
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
-FILE_PART_LIMIT_BYTES = max(1_048_576, Settings().submission_file_part_max_bytes)
+FILE_PART_LIMIT_BYTES = max(1_048_576, Settings().submission_file_part_max_bytes_admin)
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 UTC_TZ = ZoneInfo("UTC")
