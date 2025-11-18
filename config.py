@@ -28,7 +28,7 @@ class Settings:
         part_limit_mb = float(os.getenv("SUBMISSION_FILE_PART_LIMIT_MB", "48"))
         part_limit_mb = max(1.0, part_limit_mb)
         part_limit_mb_admin = float(os.getenv("SUBMISSION_FILE_PART_LIMIT_MB_ADMIN", "48"))
-        part_limit_mb_admin = max(1.0, part_limit_mb)
+        part_limit_mb_admin = max(1.0, part_limit_mb_admin)
         self.submission_file_part_max_bytes = int(part_limit_mb * 1024 * 1024)
         self.submission_file_part_max_bytes_admin = int(part_limit_mb_admin * 1024 * 1024)
 
