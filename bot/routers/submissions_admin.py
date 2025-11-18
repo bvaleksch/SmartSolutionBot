@@ -306,6 +306,7 @@ async def _send_submission_file(message: Message, path: Path, lz, submission_id:
 		await message.answer_document(
 			file,
 			caption=lz.get("submissions.detail.file_caption", submission_id=str(submission_id), title=title),
+			request_timeout=3600,
 		)
 		return
 
@@ -355,6 +356,7 @@ async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: 
 			await message.answer_document(
 				BufferedInputFile(data, filename=filename),
 				caption=caption,
+				request_timeout=3600,
 			)
 			return
 		except TelegramRetryAfter as exc:
@@ -364,6 +366,7 @@ async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: 
 	await message.answer_document(
 		BufferedInputFile(data, filename=filename),
 		caption=caption,
+		request_timeout=3600,
 	)
 
 

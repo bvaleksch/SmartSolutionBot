@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from aiohttp import ClientTimeout
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -63,7 +64,7 @@ async def main() -> None:
     async with db.engine.begin() as conn:
         await conn.run_sync(storage.metadata.create_all)
 
-    session = AiohttpSession(api=TelegramAPIServer.from_base("http://127.0.0.1:8081", is_local=True))
+    session = AiohttpSession(api=TelegramAPIServer.from_base("http://127.0.0.1:8081", is_local=True), timeout=ClientTimeout(total=3600))
     bot = Bot(
         BOT_TOKEN,
         session=session,
