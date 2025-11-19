@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime
 import uuid
 from pathlib import Path
@@ -30,9 +31,12 @@ from smart_solution.bot.routers.utils import get_localizer_by_user
 from smart_solution.bot.services.user import UserService
 from smart_solution.bot.services.submission import SubmissionService
 from smart_solution.bot.services.team import TeamService
+from smart_solution.bot.services.competition import CompetitionService
+from smart_solution.bot.services.auto_judge import auto_judge
 from smart_solution.bot.services.audit_log import instrument_router_module
 
 router = Router(name="submissions_admin")
+logger = logging.getLogger(__name__)
 
 PAGE_SIZE = 8
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
@@ -47,6 +51,7 @@ RATE_PREFIX = "sadm.rate"
 RERATE_PREFIX = "sadm.rerate"
 STATUS_PREFIX = "sadm.status"
 DOWNLOAD_PREFIX = "sadm.dl"
+RECHECK_PREFIX = "sadm.recheck"
 
 
 class SubmissionModerationFSM(StatesGroup):
@@ -254,23 +259,32 @@ async def _open_submission_details(
 	sub_svc = SubmissionService()
 	team_svc = TeamService()
 	user_svc = UserService()
+	comp_svc = CompetitionService()
 
 	submission = await sub_svc.get_submission(submission_id)
 	membership = await team_svc.get_team_user(submission.team_user_id)
 	team = await team_svc.get_team(membership.team_id) if membership else None
 	user = await user_svc.get_user(uid=membership.user_id, autoupdate=False) if membership else None
+	track = await comp_svc.get_track_by_id(team.track_id) if team and team.track_id else None
+	can_recheck = bool(track and track.slug and auto_judge.has_scorer(track.slug))
 
 	text = _render_submission_details(submission, team, user, lz)
 
 	rows: list[list[InlineKeyboardButton]] = []
-	rows.append(
-		[
+	download_row = [
+		InlineKeyboardButton(
+			text=lz.get("submissions.detail.download"),
+			callback_data=f"{DOWNLOAD_PREFIX}:{submission.id}",
+		)
+	]
+	if can_recheck:
+		download_row.append(
 			InlineKeyboardButton(
-				text=lz.get("submissions.detail.download"),
-				callback_data=f"{DOWNLOAD_PREFIX}:{submission.id}",
+				text=lz.get("submissions.detail.recheck"),
+				callback_data=f"{RECHECK_PREFIX}:{submission.id}",
 			)
-		]
-	)
+		)
+	rows.append(download_row)
 	rows.append(
 		[
 			InlineKeyboardButton(
@@ -328,12 +342,12 @@ async def _send_submission_file(message: Message, path: Path, lz, submission_id:
 
 
 async def _send_document_parts(
-	message: Message,
-	path: Path,
-	total_parts: int,
-	width: int,
-	chunk_size: int,
-	lz,
+    message: Message,
+    path: Path,
+    total_parts: int,
+    width: int,
+    chunk_size: int,
+    lz,
 ) -> None:
 	base_name = path.name
 	with path.open("rb") as src:
@@ -351,10 +365,10 @@ async def _send_document_parts(
 
 
 async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: str | None) -> None:
-	for attempt in range(3):
-		try:
-			await message.answer_document(
-				BufferedInputFile(data, filename=filename),
+    for attempt in range(3):
+        try:
+            await message.answer_document(
+                BufferedInputFile(data, filename=filename),
 				caption=caption,
 				request_timeout=3600,
 			)
@@ -363,11 +377,80 @@ async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: 
 			delay = getattr(exc, "retry_after", 2) or 2
 			await asyncio.sleep(max(1, int(delay)))
 	# give up with standard exception
-	await message.answer_document(
-		BufferedInputFile(data, filename=filename),
-		caption=caption,
-		request_timeout=3600,
+    await message.answer_document(
+        BufferedInputFile(data, filename=filename),
+        caption=caption,
+        request_timeout=3600,
+    )
+
+
+def _schedule_recheck(
+	*,
+	message: Message,
+	submission: SubmissionRead,
+	team,
+	track,
+	file_path: Path,
+	user: UserRead,
+) -> None:
+	task = asyncio.create_task(
+		_run_recheck(message=message, submission=submission, team=team, track=track, file_path=file_path, user=user)
 	)
+	task.add_done_callback(_log_recheck_task_error)
+
+
+async def _run_recheck(
+	*,
+	message: Message,
+	submission: SubmissionRead,
+	team,
+	track,
+	file_path: Path,
+	user: UserRead,
+) -> None:
+	lz = await get_localizer_by_user(user)
+	try:
+		result = await auto_judge.evaluate_submission(
+			submission=submission,
+			team=team,
+			track=track,
+			file_path=file_path,
+		)
+	except Exception:
+		logger.exception("Failed to re-check submission %s", submission.id)
+		body = lz.get("submissions.detail.recheck_failed")
+	else:
+		if result is None:
+			body = lz.get("submissions.detail.recheck_unavailable")
+		elif result.success:
+			status_text = _status_label(lz, result.status) if result.status else lz.get(
+				"submissions.detail.recheck_unknown_status"
+			)
+			value_text = _format_value(result.value)
+			body = result.message or lz.get(
+				"submissions.detail.recheck_success",
+				status=status_text,
+				value=value_text,
+			)
+		else:
+			body = result.message or lz.get("submissions.detail.recheck_failed")
+
+	text = lz.get(
+		"submissions.detail.recheck_result",
+		submission_id=str(submission.id),
+		title=submission.title,
+		body=body,
+	)
+	await message.answer(text)
+
+
+def _log_recheck_task_error(task: asyncio.Task) -> None:
+	try:
+		task.result()
+	except asyncio.CancelledError:
+		logger.warning("Re-check task cancelled")
+	except Exception:
+		logger.exception("Re-check task failed")
 
 
 @router.message(ActionLike("buttons.submission:home:admin"))
@@ -490,6 +573,61 @@ async def submissions_download(cq: CallbackQuery, current_user: UserRead) -> Non
 		title=submission.title,
 	)
 	await cq.answer()
+
+
+@router.callback_query(F.data.startswith(f"{RECHECK_PREFIX}:"))
+async def submissions_recheck(cq: CallbackQuery, current_user: UserRead) -> None:
+	if not _is_admin(current_user):
+		return
+	lz = await get_localizer_by_user(current_user)
+	if cq.message is None:
+		await cq.answer(lz.get("submissions.detail.recheck_failed"), show_alert=True)
+		return
+
+	submission_id = uuid.UUID(cq.data.split(":")[1])
+	sub_svc = SubmissionService()
+	team_svc = TeamService()
+	comp_svc = CompetitionService()
+
+	try:
+		submission = await sub_svc.get_submission(submission_id)
+	except Exception:
+		await cq.answer(lz.get("submissions.detail.not_found"), show_alert=True)
+		return
+
+	membership = await team_svc.get_team_user(submission.team_user_id)
+	if membership is None:
+		await cq.answer(lz.get("submissions.detail.recheck_no_track"), show_alert=True)
+		return
+
+	team = await team_svc.get_team(membership.team_id)
+	if team is None or team.track_id is None:
+		await cq.answer(lz.get("submissions.detail.recheck_no_track"), show_alert=True)
+		return
+
+	track = await comp_svc.get_track_by_id(team.track_id)
+	if track is None or not track.slug or not auto_judge.has_scorer(track.slug):
+		await cq.answer(lz.get("submissions.detail.recheck_unavailable"), show_alert=True)
+		return
+
+	try:
+		file_path = _submission_file_path(submission)
+	except FileNotFoundError:
+		await cq.answer(lz.get("submissions.detail.file_missing"), show_alert=True)
+		return
+
+	await cq.answer(lz.get("submissions.detail.recheck_started"))
+	await cq.message.answer(
+		lz.get("submissions.detail.recheck_in_progress", title=submission.title)
+	)
+	_schedule_recheck(
+		message=cq.message,
+		submission=submission,
+		team=team,
+		track=track,
+		file_path=file_path,
+		user=current_user,
+	)
 
 
 async def _start_moderation_flow(
