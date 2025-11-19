@@ -13,10 +13,10 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import (
-    Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
+	Message,
+	CallbackQuery,
+	InlineKeyboardMarkup,
+	InlineKeyboardButton,
 )
 from aiogram.types import FSInputFile, BufferedInputFile
 from aiogram.exceptions import TelegramRetryAfter
@@ -342,12 +342,12 @@ async def _send_submission_file(message: Message, path: Path, lz, submission_id:
 
 
 async def _send_document_parts(
-    message: Message,
-    path: Path,
-    total_parts: int,
-    width: int,
-    chunk_size: int,
-    lz,
+	message: Message,
+	path: Path,
+	total_parts: int,
+	width: int,
+	chunk_size: int,
+	lz,
 ) -> None:
 	base_name = path.name
 	with path.open("rb") as src:
@@ -365,10 +365,10 @@ async def _send_document_parts(
 
 
 async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: str | None) -> None:
-    for attempt in range(3):
-        try:
-            await message.answer_document(
-                BufferedInputFile(data, filename=filename),
+	for attempt in range(3):
+		try:
+			await message.answer_document(
+				BufferedInputFile(data, filename=filename),
 				caption=caption,
 				request_timeout=3600,
 			)
@@ -377,11 +377,11 @@ async def _deliver_chunk(message: Message, data: bytes, filename: str, caption: 
 			delay = getattr(exc, "retry_after", 2) or 2
 			await asyncio.sleep(max(1, int(delay)))
 	# give up with standard exception
-    await message.answer_document(
-        BufferedInputFile(data, filename=filename),
-        caption=caption,
-        request_timeout=3600,
-    )
+	await message.answer_document(
+		BufferedInputFile(data, filename=filename),
+		caption=caption,
+		request_timeout=3600,
+	)
 
 
 def _schedule_recheck(
