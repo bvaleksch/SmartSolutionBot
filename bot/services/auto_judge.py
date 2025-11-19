@@ -108,7 +108,24 @@ class AutoJudgeService:
 		track: TrackRead,
 		file_path: Path,
 	) -> Optional[AutoJudgeResult]:
-		"""Run the registered scorer for a submission and persist the result."""
+		"""Run the registered scorer sequentially and persist the result."""
+		lock = self._get_judge_lock()
+		async with lock:
+			return await self._evaluate_submission_unlocked(
+				submission=submission,
+				team=team,
+				track=track,
+				file_path=file_path,
+			)
+
+	async def _evaluate_submission_unlocked(
+		self,
+		*,
+		submission: SubmissionRead,
+		team: TeamRead,
+		track: TrackRead,
+		file_path: Path,
+	) -> Optional[AutoJudgeResult]:
 		slug = (track.slug or "").strip().lower()
 		scorer = self._scorers.get(slug)
 		if scorer is None:
@@ -221,14 +238,12 @@ class AutoJudgeService:
 			except ValueError:
 				pass
 
-		lock = self._get_judge_lock()
-		async with lock:
-			result = await self.evaluate_submission(
-				submission=created,
-				team=team,
-				track=track,
-				file_path=file_path,
-			)
+		result = await self.evaluate_submission(
+			submission=created,
+			team=team,
+			track=track,
+			file_path=file_path,
+		)
 		if result is not None:
 			self._results[created.id] = result
 			logger.info(
