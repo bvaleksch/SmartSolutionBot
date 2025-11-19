@@ -189,7 +189,7 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
 		command_main,
 		main_exists,
 	)
-	cmd = [
+	docker_cmd = [
 	    "docker",
 	    "run",
 	    "--rm",
@@ -200,6 +200,13 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
 	    "python3",
 	    command_main
 	]
+	timeout_binary = shutil.which("timeout")
+	used_timeout_wrapper = bool(timeout_binary)
+	if used_timeout_wrapper:
+		cmd = [timeout_binary, "--signal=KILL", str(EXEC_TIMEOUT), *docker_cmd]
+	else:
+		cmd = docker_cmd
+	run_timeout = EXEC_TIMEOUT + 30 if used_timeout_wrapper else EXEC_TIMEOUT
 	try:
 		completed = subprocess.run(
 			cmd,
@@ -207,7 +214,7 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
 			stderr=subprocess.PIPE,
 			check=False,
 			text=True,
-			timeout=EXEC_TIMEOUT,
+			timeout=run_timeout,
 		)
 	except FileNotFoundError:
 		logger.error("Docker executable not found when evaluating submission")
@@ -230,8 +237,18 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
 				success=False,
 				message=f"Execution timed out after {EXEC_TIMEOUT}s.",
 			),
+	)
+	if used_timeout_wrapper and completed.returncode == 124:
+		logger.error("Auto-judge first_track timeout after %s seconds (wrapper exit 124)", EXEC_TIMEOUT)
+		return _ContainerExecResult(
+			success=False,
+			result=AutoJudgeResult(
+				status=SubmissionStatus.ERROR,
+				value=None,
+				success=False,
+				message=f"Execution timed out after {EXEC_TIMEOUT}s.",
+			),
 		)
-
 	if completed.returncode != 0:
 		logger.warning(
 			"Auto-judge first_track: container exited with %s, stderr=%s",
