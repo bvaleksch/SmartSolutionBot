@@ -40,6 +40,7 @@ import re
 import shutil
 import string
 import subprocess
+import uuid
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -272,6 +273,7 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
     workdir = WORKDIR_CONTAINER if not workdir_suffix else f"{WORKDIR_CONTAINER}/{workdir_suffix}"
     command_main = main_rel_parts[-1] if main_rel_parts else "main.py"
     main_exists = (tmp_dir / main_relative).exists()
+    container_name = f"ai-track-{uuid.uuid4().hex}"
     logger.debug(
         "Auto-judge ai_track: container workdir=%s, command=%s, main_exists=%s",
         workdir,
@@ -282,6 +284,8 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
         "docker",
         "run",
         "--rm",
+        "--name",
+        container_name,
         "--network",
         "none",            # no internet access
         "--memory",
@@ -296,21 +300,12 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
         "python3",
         command_main,
     ]
-    timeout_binary = shutil.which("timeout")
-    used_timeout_wrapper = bool(timeout_binary)
-    if used_timeout_wrapper:
-        cmd = [timeout_binary, "--signal=KILL", str(EXEC_TIMEOUT), *docker_cmd]
-    else:
-        cmd = docker_cmd
-    run_timeout = EXEC_TIMEOUT + 30 if used_timeout_wrapper else EXEC_TIMEOUT
     try:
-        completed = subprocess.run(
-            cmd,
+        process = subprocess.Popen(
+            docker_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            check=False,
             text=True,
-            timeout=run_timeout,
         )
     except FileNotFoundError:
         logger.error("Docker executable not found when evaluating submission")
@@ -323,8 +318,13 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
                 message="Docker executable is not available.",
             ),
         )
+    try:
+        stdout, stderr = process.communicate(timeout=EXEC_TIMEOUT)
     except subprocess.TimeoutExpired:
         logger.error("Auto-judge ai_track timeout after %s seconds", EXEC_TIMEOUT)
+        _kill_container(container_name)
+        process.kill()
+        stdout, stderr = process.communicate()
         return _ContainerExecResult(
             success=False,
             result=AutoJudgeResult(
@@ -335,22 +335,11 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
             ),
         )
 
-    if used_timeout_wrapper and completed.returncode == 124:
-        logger.error("Auto-judge ai_track timeout after %s seconds (wrapper exit 124)", EXEC_TIMEOUT)
-        return _ContainerExecResult(
-            success=False,
-            result=AutoJudgeResult(
-                status=SubmissionStatus.ERROR,
-                value=None,
-                success=False,
-                message=f"Execution timed out after {EXEC_TIMEOUT}s.",
-            ),
-        )
-    if completed.returncode != 0:
+    if process.returncode != 0:
         logger.warning(
             "Auto-judge ai_track: container exited with %s, stderr=%s",
-            completed.returncode,
-            completed.stderr.strip(),
+            process.returncode,
+            (stderr or "").strip(),
         )
         return _ContainerExecResult(
             success=False,
@@ -359,8 +348,8 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
                 value=None,
                 success=False,
                 message=(
-                    f"Execution failed (exit {completed.returncode}). "
-                    f"stderr: {completed.stderr.strip()}"
+                    f"Execution failed (exit {process.returncode}). "
+                    f"stderr: {(stderr or '').strip()}"
                 ),
             ),
         )
@@ -373,6 +362,29 @@ def _run_container(tmp_dir: Path, main_relative: Path) -> _ContainerExecResult:
             success=True,
         ),
     )
+
+
+def _kill_container(container_name: str) -> None:
+    """Force stop the docker container if it is still running."""
+    try:
+        completed = subprocess.run(
+            ["docker", "kill", container_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+        )
+        if completed.returncode != 0:
+            logger.warning(
+                "Failed to kill container %s: exit=%s stderr=%s",
+                container_name,
+                completed.returncode,
+                (completed.stderr or "").strip(),
+            )
+    except FileNotFoundError:
+        logger.error("Docker executable not found while attempting to kill %s", container_name)
+    except Exception:
+        logger.exception("Unexpected error while killing container %s", container_name)
 
 
 # ---------------------------------------------------------------------------
