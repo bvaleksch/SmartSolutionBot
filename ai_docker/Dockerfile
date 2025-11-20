@@ -24,7 +24,9 @@ RUN pip install --no-cache-dir \
     scikit-learn \
     nltk \
     transformers \
-    sentence-transformers
+    sentence-transformers \
+    chromadb \
+    faiss-cpu
 
 # Install CPU-only PyTorch and torchvision from the official CPU index
 # (No CUDA, подходит для авто-оценки на CPU)

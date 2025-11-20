@@ -68,7 +68,8 @@
       "status": "Статус: {value}",
       "status_change": "Статус: {old} -> {new}",
       "value": "Оценка: {value}",
-      "value_change": "Оценка: {old} -> {new}"
+      "value_change": "Оценка: {old} -> {new}",
+      "message": "Сообщение: {message}"
     }
   },
   "leaderboard": {

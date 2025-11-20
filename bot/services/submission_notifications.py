@@ -134,6 +134,14 @@ class SubmissionNotificationService:
 		else:
 			lines.append(lz.get("team_user.submit.notify.value", value=value_current))
 
+		extra_message = getattr(updated, "message", None)
+		if extra_message is not None:
+			if not isinstance(extra_message, str):
+				extra_message = str(extra_message)
+			extra_message = extra_message.strip()
+			if extra_message:
+				lines.append(lz.get("team_user.submit.notify.message", message=extra_message))
+
 		text = "\n".join(lines)
 		await self._send_message(user, text)
 		logger.info(

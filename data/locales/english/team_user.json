@@ -68,7 +68,8 @@
       "status": "Status: {value}",
       "status_change": "Status: {old} -> {new}",
       "value": "Value: {value}",
-      "value_change": "Value: {old} -> {new}"
+      "value_change": "Value: {old} -> {new}",
+      "message": "Message: {message}"
     }
   },
   "leaderboard": {
